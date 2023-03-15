@@ -1,4 +1,3 @@
-from time import sleep
 from page.AuthPage import AuthPage
 from page.MainPage import MainPage
 
