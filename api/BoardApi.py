@@ -7,7 +7,7 @@ class BoardApi:
 
 
     # GET ALL THE BOARDS
-    def get_all_boards(self, org_id: str) -> list:
+    def get_all_boards_by_org_id(self, org_id: str) -> list:
         path = "{trello}organization/{id}?boards=open&board_fields=all&fields=boards".format(trello=self.base_url, id=org_id)
         cookie = {"token": self.token}
         resp = requests.get(path, cookies=cookie)      
