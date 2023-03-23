@@ -23,8 +23,6 @@ def authorization_test(browser):
     current_url = main_page.get_current_url()
     with allure.step("Проверить что"+current_url+"заканчивается на vadimkandeev_1975/boards"):
         assert current_url.endswith("vadimkandeev_1975/boards")
-        
-    
     with allure.step("Проверить что указаны данные пользоватля"):
         with allure.step("Имя пользователя должно быть {username}"):
             assert info[0] == username

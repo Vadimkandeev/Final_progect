@@ -4,12 +4,15 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from configuration.ConfigProvider import ConfigProvider
+
 
 
 class AuthPage: 
 
     def __init__(self, driver:WebDriver) -> None:
-        self.__url="https://trello.com/login"
+        url = ConfigProvider().getint("ui", "base_url")
+        self.__url=url+"login"
         self.__driver = driver
 
     @allure.step("run to user page")

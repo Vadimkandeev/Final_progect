@@ -22,15 +22,21 @@ class BoardApi:
         new_table_body = {"token": self.token,
                           "name": name,
                           "defaultLists": default_Lists}
-        resp = requests.post(path, cookies=cookie, json=new_table_body)      
+        resp = requests.post(path, cookies=cookie, json=new_table_body) 
+           
         return resp.json()
     
     # DELETE TABLE 
     def delete_board_by_id(self, id):
-       path = "{trello}boards/{board_id}".format(trello=self.base_url, board_id = id)
-       delete_table_body = {"token": self.token} 
-       resp = requests.delete(path, cookies=delete_table_body , json=delete_table_body)
-       return resp.json()
+        path = "{trello}boards/{board_id}".format(trello=self.base_url, board_id = id)
+        delete_table_body = {"token": self.token} 
+        resp = requests.delete(path, cookies=delete_table_body , json=delete_table_body)
+       
+        return resp.json()
 
 
+    # ADD NEW CARD FROM A BOARD
+    def add_card(self):
+       
+       path = "{trello}boards/{board_id}/".format(trello=self.base_url, board_id = id) 
     
