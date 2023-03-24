@@ -1,8 +1,12 @@
 import requests
+from faker import Faker
+
+
+fake = Faker() 
 
 class BoardApi:
     def __init__(self, base_url:str, token:str) -> None:
-        self.base_url =  base_url #"https://trello.com/1/"
+        self.base_url =  base_url #"https://trello.com/1/"   /1/cards
         self.token = token # "62a01eb2f072a11c2e65969c/ATTS2gQtUeAdkLAMAoxtiaMh7Lk9hwnziuABBiVn9MpBMnHufo0MwiF3TW4BAfcq0KbF815A9D09"
 
 
@@ -36,7 +40,51 @@ class BoardApi:
 
 
     # ADD NEW CARD FROM A BOARD
-    def add_card(self):
-       
-       path = "{trello}boards/{board_id}/".format(trello=self.base_url, board_id = id) 
+    def add_card(self, id_list, name_list):
+        create_list_body = {
+           "token": self.token,
+           "idList": id_list,
+           "name": name_list
+           }
+        cookie = {"token": self.token}
+        path = "{trello}cards".format(trello=self.base_url)  
+        resp = requests.post(path, cookies=cookie , json = create_list_body)
+
+        return resp.json()
     
+
+    def get_list(self, id_table): #{{BaseUrl}}1/boards/{{speed}}/lists/
+        cookie = {"token": self.token}
+        path = "{trello}boards/{table_id}/lists/".format(trello=self.base_url, table_id = id_table)
+        resp = requests.get(path, cookies=cookie).json()
+        return resp
+
+    
+    def get_card(self, id_card):
+        cookie = {"token": self.token}
+        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id = id_card)
+        resp = requests.get(path, cookies=cookie).json()
+        return resp
+  
+    def rename_card(self, id_card):
+        cookie = {"token": self.token}
+        body = {"name": fake.text(20)}  
+        path = "{trello}cards/{card_id}?token={token}".format(trello=self.base_url, card_id = id_card, token=self.token)
+        resp = requests.put(path, cookies=cookie, json=body).json()
+        return resp
+    
+
+    def delete_a_card(self, id_card):
+        cookie = {"token": self.token}
+        
+        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id = id_card)
+        resp = requests.put(path, cookies=cookie, json=cookie).json()
+        return resp
+    
+    def get_all_cards_on_list(self, id_list):
+        cookie = {"token": self.token}
+        path = "{trello}lists/{list_id}/cards".format(trello=self.base_url, list_id = id_list)
+        resp = requests.get(path, cookies=cookie).json()
+        return resp
+    
+    #def create_new_card

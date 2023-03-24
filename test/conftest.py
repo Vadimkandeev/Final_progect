@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from api.BoardApi import BoardApi
 from configuration.ConfigProvider import ConfigProvider
+from faker import Faker
+fake = Faker()
 
 # base_url = "https://trello.com/1/"
 token = "62a01eb2f072a11c2e65969c/ATTS2gQtUeAdkLAMAoxtiaMh7Lk9hwnziuABBiVn9MpBMnHufo0MwiF3TW4BAfcq0KbF815A9D09"
@@ -42,6 +44,7 @@ def dummy_board_id() -> str:
 
     with allure.step("Pre create a board"):
         resp = api.create_board("board_for_deleted").get("id")
+
     
     return resp
 
@@ -57,10 +60,50 @@ def delete_board() -> str:
         api.delete_board_by_id(dictionary.get("board_id"))
    
 
-# @pytest.fixture
-# def create_list():
-#     api = BoardApi(ConfigProvider().get("api", "base_url"), token)
+@pytest.fixture
+def get_list_from_a_board():
+    api = BoardApi(ConfigProvider().get("api", "base_url"), token)
+    
+    with allure.step("Pre create a board"):
+        board_id = api.create_board("board_for_add_card").get("id")
+        list_id = api.get_list(board_id)[0]["id"]
 
-#     with allure.step("Pre create a board"):
-#         resp = api.create_board("board_for_deleted").get("id")
- 
+        card_id = api.add_card(list_id, fake.text(20))
+
+        print("RESP    ", board_id)
+        print("LIST_ID    ", list_id)
+        print("NAME++++++   ", card_id["name"])
+        print("ID++++++   ", card_id["id"]) 
+        print("RESP++++++   ", card_id)    
+    return list_id, board_id
+
+
+
+@pytest.fixture
+def get_card_from_list():
+    api = BoardApi(ConfigProvider().get("api", "base_url"), token)
+
+    with allure.step("Получить айди карточки"):
+        board = api.create_board("board_for_add_card")# Создать новую доску
+        board_id = board.get("id") # Получить АЙДИ доски
+        list_lists = api.get_list(board_id) # Получить список
+        list_id = api.get_list(board_id)[0]["id"] # Получить айди списка
+        resp = api.add_card(list_id, fake.text(20)) # Создать карточку на листе
+        card_id = resp["id"] # Получить АЙДИ карточки
+        card_name = resp["name"] # Получить имя карточки
+
+
+        print("RESP******", resp)
+        print("BOARD_ID******", board_id)
+        print("LIST_ID******", list_id)
+        print("CARD_ID******", card_id)
+        print("CARD_NAME******", card_name)
+        print("BOARD******", board)
+        print("list_lists******", list_lists)
+        print("LEN__list_lists******", len(list_lists))
+        
+                 
+    return card_id, card_name, board_id, list_id
+
+
+
