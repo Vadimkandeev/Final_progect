@@ -49,8 +49,8 @@ def test_rename_card (api_client: BoardApi, get_card_from_list: list, delete_boa
     new_create_name = api_client.rename_card(get_card_from_list[0])  
     delete_board["board_id"] = get_card_from_list[2]
 
-    print("OLD NAME******** ", old_name)
-    print("NEW NAME********", new_create_name)
+    # print("OLD NAME******** ", old_name)
+    # print("NEW NAME********", new_create_name)
 
     assert old_name != new_create_name
     
@@ -64,8 +64,11 @@ def test_delete_card(api_client: BoardApi, get_card_from_list: list, delete_boar
     
     delete_board["board_id"] = get_card_from_list[2]
 
-    print("old_list_cards_on_list---------", old_list_cards_on_list,  len(old_list_cards_on_list))
-    print("new_list_cards_on_list---------", new_list_cards_on_list, len(new_list_cards_on_list))
+    # print("old_list_cards_on_list---------",  len(old_list_cards_on_list))
+    # print("new_list_cards_on_list---------",  len(new_list_cards_on_list))
+
+    assert len(old_list_cards_on_list) - len(new_list_cards_on_list) == 1
+
 
 
 

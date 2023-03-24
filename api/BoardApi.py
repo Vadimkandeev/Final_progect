@@ -78,7 +78,7 @@ class BoardApi:
         cookie = {"token": self.token}
         
         path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id = id_card)
-        resp = requests.put(path, cookies=cookie, json=cookie).json()
+        resp = requests.delete(path, cookies=cookie, json=cookie).json()
         return resp
     
     def get_all_cards_on_list(self, id_list):
@@ -87,4 +87,6 @@ class BoardApi:
         resp = requests.get(path, cookies=cookie).json()
         return resp
     
-    #def create_new_card
+    def relocate_a_card(self):
+    
+  
