@@ -40,11 +40,11 @@ class BoardApi:
 
 
     # ADD NEW CARD FROM A BOARD
-    def add_card(self, id_list, name_list):
+    def add_card(self, id_list, name_card):
         create_list_body = {
            "token": self.token,
            "idList": id_list,
-           "name": name_list
+           "name": name_card
            }
         cookie = {"token": self.token}
         path = "{trello}cards".format(trello=self.base_url)  
@@ -87,6 +87,9 @@ class BoardApi:
         resp = requests.get(path, cookies=cookie).json()
         return resp
     
-    def relocate_a_card(self):
-    
-  
+    def relocate_a_card(self, id_card, id_board, id_new_list):
+        cookie = {"token": self.token}
+        path = "{trello}cards/{card_id}?token={token}&idBoard={board_id}&idLIst={list_id}".\
+            format(trello=self.base_url, card_id=id_card, board_id=id_board, list_id = id_new_list, token = self.token)
+        resp = requests.get(path, cookies=cookie).json()
+        return resp
