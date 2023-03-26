@@ -38,7 +38,7 @@ def test_delete_a_board(api_client: BoardApi, dummy_board_id:str):
         assert len(board_list_before) - len(board_list_after) == 1
       
 
-def test_create_cadrd_on_board(api_client: BoardApi, get_id_list:list):
+def test_create_cadrd_on_board(api_client: BoardApi, get_id_list): 
     with allure.step("Создать карточку на доске"):
         name_card = fake.text(20)
         resp = api_client.add_card(get_id_list[0], name_card)
@@ -50,7 +50,7 @@ def test_create_cadrd_on_board(api_client: BoardApi, get_id_list:list):
         assert name_card == get_name_card
 
 
-def test_rename_card(api_client: BoardApi, create_new_card:list):
+def test_rename_card(api_client: BoardApi, create_new_card):
     with allure.step("Запросить имя карточки до её редактирования"):
         get_name_card =api_client.get_card(create_new_card[0])["name"]
     with allure.step("переименовать карточку"):
@@ -72,7 +72,7 @@ def test_delete_card(api_client: BoardApi, create_new_card:list):
         assert len(list_of_cards_before) - len(list_of_cards_after) == 1
     
 
-
+#  delete_board["board_id"] = resp.get("id")
 # -------------------- Это окончание эксперимента---------------------
 """
 def test_create_board(api_client: BoardApi, delete_board:dict):
