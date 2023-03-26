@@ -87,9 +87,15 @@ class BoardApi:
         resp = requests.get(path, cookies=cookie).json()
         return resp
     
-    def relocate_a_card(self, id_card, id_board, id_new_list):
+    def relocate_a_card(self, id_card, id_new_list):
         cookie = {"token": self.token}
-        path = "{trello}cards/{card_id}?token={token}&idBoard={board_id}&idLIst={list_id}".\
-            format(trello=self.base_url, card_id=id_card, board_id=id_board, list_id = id_new_list, token = self.token)
-        resp = requests.get(path, cookies=cookie).json()
+        body = {
+            "token": self.token,
+            "idList": id_new_list
+        }
+        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id=id_card)
+        resp = requests.put(path, json=body, cookies=cookie).json()
+
+        # path = "{trello}cards/{card_id}?idLIst={list_id}".format(trello=self.base_url, card_id=id_card, list_id = id_new_list)
+        # resp = requests.put(path, json=cookie, cookies=cookie).json()
         return resp
