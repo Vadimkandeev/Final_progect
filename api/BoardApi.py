@@ -7,7 +7,8 @@ fake = Faker()
 class BoardApi:
     def __init__(self, base_url:str, token:str) -> None:
         self.base_url =  base_url #"https://trello.com/1/"   /1/cards
-        self.token = token # "62a01eb2f072a11c2e65969c/ATTS2gQtUeAdkLAMAoxtiaMh7Lk9hwnziuABBiVn9MpBMnHufo0MwiF3TW4BAfcq0KbF815A9D09"
+        self.token = token # "62a01eb2f072a11c2e65969c/ATTScKZElxpOwaMptEcGVOzPa0nF8ZPh8aYXUP9CupnYn5iwrSvL60fqTSJD0yuEbTxYBEA745B5"
+                             
 
 
     # GET ALL THE BOARDS
@@ -96,6 +97,4 @@ class BoardApi:
         path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id=id_card)
         resp = requests.put(path, json=body, cookies=cookie).json()
 
-        # path = "{trello}cards/{card_id}?idLIst={list_id}".format(trello=self.base_url, card_id=id_card, list_id = id_new_list)
-        # resp = requests.put(path, json=cookie, cookies=cookie).json()
         return resp

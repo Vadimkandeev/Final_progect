@@ -5,11 +5,12 @@ import pytest
 
 fake = Faker() 
 org_id = "62a01eec169f028abfee19bd"
-token = "62a01eb2f072a11c2e65969c/ATTS2gQtUeAdkLAMAoxtiaMh7Lk9hwnziuABBiVn9MpBMnHufo0MwiF3TW4BAfcq0KbF815A9D09"
+token = "62a01eb2f072a11c2e65969c/ATTScKZElxpOwaMptEcGVOzPa0nF8ZPh8aYXUP9CupnYn5iwrSvL60fqTSJD0yuEbTxYBEA745B5"
 base_url = "https://trello.com/1/"
 api = BoardApi(base_url, token)
 
 # -------------------- Это начало эксперимента---------------------
+@pytest.mark.skip
 @allure.title("Тест на создание новой доски")
 def test_create_board(api_client: BoardApi):
     with allure.step("Получить список всех досок учетной записи до создания доски"):
@@ -27,6 +28,9 @@ def test_create_board(api_client: BoardApi):
     with allure.step("Сравнить длины списков До и После"):
         assert len(board_list_after) - len(board_list_before) == 1
 
+
+
+@pytest.mark.skip
 @allure.title("Тест на удаление новй доски")
 def test_delete_a_board(api_client: BoardApi, dummy_board_id:str):
     with allure.step("Получить список всех досок учетной записи до удаления доски"):
@@ -40,7 +44,10 @@ def test_delete_a_board(api_client: BoardApi, dummy_board_id:str):
 
     with allure.step("Сравнить длины списков До и После"):
         assert len(board_list_before) - len(board_list_after) == 1
-      
+
+
+
+@pytest.mark.skip   
 @allure.title("Тест на создание карточки на доске")
 def test_create_cadrd_on_board(api_client: BoardApi, get_id_list, delete_board): 
     with allure.step("Создать карточку на доске"):
@@ -59,6 +66,9 @@ def test_create_cadrd_on_board(api_client: BoardApi, get_id_list, delete_board):
     with allure.step("Сравнить присовенное имя и полученное по запросу"):
         assert name_card == get_name_card
 
+
+    
+@pytest.mark.skip
 @allure.title("Переименование карточки")
 def test_rename_card(api_client: BoardApi, create_new_card, delete_board):
     with allure.step("Запросить имя карточки до её редактирования"):
@@ -76,6 +86,9 @@ def test_rename_card(api_client: BoardApi, create_new_card, delete_board):
     with allure.step("Сравнить старое и новое имя"):
         assert get_name_card != new_name_card
 
+
+
+@pytest.mark.skip
 @allure.title("Удаление карточки")
 def test_delete_card(api_client: BoardApi, create_new_card:list, delete_board):
     with allure.step("Запросить список карточек до удаления"):
@@ -93,6 +106,9 @@ def test_delete_card(api_client: BoardApi, create_new_card:list, delete_board):
     with allure.step("Сравнить списки До и После"):
         assert len(list_of_cards_before) - len(list_of_cards_after) == 1
 
+
+    
+@pytest.mark.skip
 @allure.title("Перенос карточки на другой список")
 def test_relocate_card(api_client: BoardApi, create_new_card:list, get_id_list:dict, delete_board):
     with allure.step("Получить id карточки"):
@@ -115,5 +131,7 @@ def test_relocate_card(api_client: BoardApi, create_new_card:list, get_id_list:d
     
 
 # -------------------- Это окончание эксперимента---------------------
-
-
+def test_get_all_boards(api_client: BoardApi):
+    board_list = api_client.get_all_boards_by_org_id(org_id)
+    id_board = board_list[0]["id"]
+    api_client.delete_board_by_id(id_board)

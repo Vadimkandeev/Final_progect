@@ -3,7 +3,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 from configuration.ConfigProvider import ConfigProvider
 
 
@@ -11,7 +10,7 @@ class MainPage:
 
     def __init__(self, driver:WebDriver) -> None:
         self.__driver = driver
-        self.url = ConfigProvider().getint("ui", "base_url")
+        self.url = ConfigProvider().get("ui", "base_url")
         self.__url = self.url+"u/vadimkandeev_1975/boards"
 
 
@@ -40,8 +39,8 @@ class MainPage:
     @allure.step("Добавить куки авторизации")
     def add_cookie(self):
         cookie = {
-            "name": "tiken",
-            "value": "62a01eb2f072a11c2e65969c/ATTS2gQtUeAdkLAMAoxtiaMh7Lk9hwnziuABBiVn9MpBMnHufo0MwiF3TW4BAfcq0KbF815A9D09"
+            "name": "token",
+            "value": "62a01eb2f072a11c2e65969c/ATTScKZElxpOwaMptEcGVOzPa0nF8ZPh8aYXUP9CupnYn5iwrSvL60fqTSJD0yuEbTxYBEA745B5"
         }
         self.__driver.add_cookie(cookie)
 
@@ -65,3 +64,31 @@ class MainPage:
     def click_save_button(self):
         self.__driver.find_element(By.CSS_SELECTOR, "button[data-testid=create-board-submit-button]").click()
         WebDriverWait(self.__driver, 10).until(EC.url_contains(self.url, ""))
+
+    
+    @allure.step("Нажать кнопку 'Создать доску' ")
+    def click_create_a_board(self, locator):
+        self.__driver.find_element(By.CSS_SELECTOR, locator).click()
+
+    
+    @allure.step("Ввести имя доски")
+    def write_name_a_board(self, name):
+        self.__driver.find_element(By.CSS_SELECTOR, ".nch-textfield__input").send_keys(name)
+
+
+    @allure.step("Клик по кнопке с тремя точками справа в шапке страницы")
+    def click_on_button_three_point(self):
+        self.__driver.find_element(By.CSS_SELECTOR, "[type='button'][aria-label='Меню']").click()
+
+    
+    @allure.step("клик по кнопке Закрыть доску внутри меню")#"a.js-close-board"  
+    def click_on_button_close_board(self):
+        self.__driver.find_element(By.CSS_SELECTOR, "a.js-close-board").click()
+
+
+    @allure.step("ПОдтвердить закрытие доски")# "[type='submit'][value='Закрыть']"
+    def confirm_close_board(self):
+        self.__driver.find_element(By.CSS_SELECTOR, "[type='submit'][value='Закрыть']").click()
+
+    
+    

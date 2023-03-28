@@ -11,7 +11,7 @@ from configuration.ConfigProvider import ConfigProvider
 class AuthPage: 
 
     def __init__(self, driver:WebDriver) -> None:
-        url = ConfigProvider().getint("ui", "base_url")
+        url = ConfigProvider().get("ui", "base_url")
         self.__url=url+"login"
         self.__driver = driver
 
