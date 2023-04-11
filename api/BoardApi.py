@@ -1,17 +1,18 @@
 import requests
 from faker import Faker
-
+import allure
 
 fake = Faker() 
 
-class BoardApi:
+class BoardAPI:
     def __init__(self, base_url:str, token:str) -> None:
-        self.base_url =  base_url #"https://trello.com/1/"   /1/cards
-        self.token = token # "62a01eb2f072a11c2e65969c/ATTScKZElxpOwaMptEcGVOzPa0nF8ZPh8aYXUP9CupnYn5iwrSvL60fqTSJD0yuEbTxYBEA745B5"
+        self.base_url =  base_url
+        self.token = token
                              
 
 
     # GET ALL THE BOARDS
+    @allure.step("Получить все доски организации {org_id}")
     def get_all_boards_by_org_id(self, org_id: str) -> list:
         path = "{trello}organization/{id}?boards=open&board_fields=all&fields=boards".format(trello=self.base_url, id=org_id)
         cookie = {"token": self.token}
@@ -19,7 +20,8 @@ class BoardApi:
         return resp.json().get("boards")    
 
 
-    # CREATE NEW TABLE   
+    # CREATE NEW TABLE  
+    @allure.step("Создать доску {name}.") 
     def create_board(self, name, default_Lists = True) -> dict:
         
         path = "{trello}boards/".format(trello=self.base_url)
@@ -32,6 +34,7 @@ class BoardApi:
         return resp.json()
     
     # DELETE TABLE 
+    @allure.step("Удалить доску {id}")
     def delete_board_by_id(self, id):
         path = "{trello}boards/{board_id}".format(trello=self.base_url, board_id = id)
         delete_table_body = {"token": self.token} 
@@ -40,61 +43,4 @@ class BoardApi:
         return resp.json()
 
 
-    # ADD NEW CARD FROM A BOARD
-    def add_card(self, id_list, name_card):
-        create_list_body = {
-           "token": self.token,
-           "idList": id_list,
-           "name": name_card
-           }
-        cookie = {"token": self.token}
-        path = "{trello}cards".format(trello=self.base_url)  
-        resp = requests.post(path, cookies=cookie , json = create_list_body)
-
-        return resp.json()
-    
-
-    def get_list(self, id_table): #{{BaseUrl}}1/boards/{{speed}}/lists/
-        cookie = {"token": self.token}
-        path = "{trello}boards/{table_id}/lists/".format(trello=self.base_url, table_id = id_table)
-        resp = requests.get(path, cookies=cookie).json()
-        return resp
-
-    
-    def get_card(self, id_card):
-        cookie = {"token": self.token}
-        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id = id_card)
-        resp = requests.get(path, cookies=cookie).json()
-        return resp
-  
-    def rename_card(self, id_card):
-        cookie = {"token": self.token}
-        body = {"name": fake.text(20)}  
-        path = "{trello}cards/{card_id}?token={token}".format(trello=self.base_url, card_id = id_card, token=self.token)
-        resp = requests.put(path, cookies=cookie, json=body).json()
-        return resp
-    
-
-    def delete_a_card(self, id_card):
-        cookie = {"token": self.token}
-        
-        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id = id_card)
-        resp = requests.delete(path, cookies=cookie, json=cookie).json()
-        return resp
-    
-    def get_all_cards_on_list(self, id_list):
-        cookie = {"token": self.token}
-        path = "{trello}lists/{list_id}/cards".format(trello=self.base_url, list_id = id_list)
-        resp = requests.get(path, cookies=cookie).json()
-        return resp
-    
-    def relocate_a_card(self, id_card, id_new_list):
-        cookie = {"token": self.token}
-        body = {
-            "token": self.token,
-            "idList": id_new_list
-        }
-        path = "{trello}cards/{card_id}".format(trello=self.base_url, card_id=id_card)
-        resp = requests.put(path, json=body, cookies=cookie).json()
-
-        return resp
+   

@@ -1,0 +1,10 @@
+{
+    "org_id": "62a0fe726c5b4e7d5d86df16",
+    "board_name": "New board",
+    "list_names": ["First list", "Second list"],
+    "card_name": "New card",
+    "new_data": {
+      "card_new_name": "Card`s new name",
+      "card_new_description": "We can change card`s description!"  
+    }
+}

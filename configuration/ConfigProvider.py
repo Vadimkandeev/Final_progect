@@ -20,5 +20,8 @@ class ConfigProvider:
     def get_ui_url(self):
         return self.config["ui"].get("base_url")
     
+    def get_api_url(self):
+        return self.config["api"].get("base_url")
+    
         
 

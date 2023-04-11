@@ -1,114 +1,245 @@
 import allure
 import pytest
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from api.BoardApi import BoardApi
-from api.Api_for_UI import Api_for_UI
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
+
+from user_data.UserProvider import UserProvider
+from testdata.DataProvider import DataProvider
 from configuration.ConfigProvider import ConfigProvider
-from faker import Faker
-fake = Faker()
 
-# base_url = "https://trello.com/1/"
-token = "62a01eb2f072a11c2e65969c/ATTScKZElxpOwaMptEcGVOzPa0nF8ZPh8aYXUP9CupnYn5iwrSvL60fqTSJD0yuEbTxYBEA745B5"
-org_id = "62a01eec169f028abfee19bd"
-class Conftest:
+from pages.MainPage import MainPage
+from pages.BoardPage import BoardPage
+from pages.ListPage import ListPage
+from pages.CardPage import CardPage
+from pages.ApiPage import ApiForUI
 
+from api.BoardAPI import BoardAPI
+from api.CardAPI import CardAPI
 
-    @pytest.fixture
-    def browser():
-        with allure.step("Открыть и настроить браузер"):
+@pytest.fixture
+def test_data() -> DataProvider:
+    with allure.step("Получить тестовые данные"):
+        return DataProvider()
+    
 
-            timeout = ConfigProvider().getint("ui", "timeout")
+@pytest.fixture
+def user_data() -> UserProvider:
+    with allure.step("Получить данные пользователя"):
+        return UserProvider()
+    
 
+@pytest.fixture
+def browser():
+    with allure.step("Открыть и настроить браузер"):
+        timeout = ConfigProvider().get("ui", "timeout")
+        browser_name = ConfigProvider().get("ui", "browser_name")
+        base_url = ConfigProvider().get("ui", "base_url")
+        url_for_token = ConfigProvider().get("ui", "url_for_token")
+        token = UserProvider().get("user", "token")
+
+        if browser_name == "chrome":
             browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-            browser.implicitly_wait(timeout)
-            browser.maximize_window()
-            yield browser
+        else:
+            browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+
+        browser.implicitly_wait(timeout)
+        browser.maximize_window()
+
+        browser.get(base_url)
+
+        browser.add_cookie({'name': 'token', 'value': token})
+            
+        browser.get(url_for_token)    
+
+        yield browser
+
+    with allure.step("Закрыть браузер"):
+        browser.quit()
 
 
-            with allure.step("Закрыть браузер"):
-                browser.quit()
+@pytest.fixture
+def api_client_for_ui() -> ApiForUI:
+    with allure.step("Создать экземпляр класса ApiForUI"):
+        return ApiForUI(
+            ConfigProvider().get_api_url(),
+            UserProvider().get_user_token())
+ 
 
-    @pytest.fixture
-    def api_client() -> BoardApi:
-    
-        return BoardApi(ConfigProvider().get("api", "base_url"), token)  
-    
-    @pytest.fixture
-    def ui_client() -> Api_for_UI:
-    
-        return Api_for_UI(ConfigProvider().get("api", "base_url"), token)  
+@pytest.fixture
+def for_delete_board(browser, test_data: dict, api_client_for_ui: ApiForUI):
+    board_name = test_data.get("board_name")
+    api_client_for_ui.create_board(board_name)
 
-
-    @pytest.fixture
-    def api_client_no_auth() -> BoardApi:
-        return BoardApi(ConfigProvider().get("api", "base_url"), "")  
+    yield browser
 
 
-    @pytest.fixture
-    def dummy_board_id() -> str:
-        api = BoardApi(ConfigProvider().get("api", "base_url"), token)
+@pytest.fixture
+def for_create_board(test_data: dict, api_client_for_ui: ApiForUI):
+    org_id =test_data.get("org_id")
+    board_name = test_data.get("board_name")
 
-        with allure.step("Pre create a board"):
-            resp = api.create_board("board_for_deleted").get("id")
-    
+    yield
+
+    board_list = api_client_for_ui.get_all_boards_by_org_id(org_id)
+    length = len(board_list)
+    count = 0
+    for count in range(0, length):
+        if board_list[count]["name"] == board_name:
+            api_client_for_ui.delete_board_by_id(board_list[count]["id"])
+            count = count + 1
+
+
+@pytest.fixture
+def dummy_board_for_ui(browser, test_data: dict, api_client_for_ui: ApiForUI):
+    board_name = test_data.get("board_name")
+    list_name = test_data.get("list_names")[0]
+
+    resp = api_client_for_ui.create_board(board_name).get("id")
+
+    board_page = BoardPage(browser)
+    board_page.create_list_ui(list_name) 
+
+    yield browser
+
+    with allure.step("Удалить доску после теста"):
+        api_client_for_ui.delete_board_by_id(resp)  
+
+
+@pytest.fixture
+def lists_name_on_board_for_ui(api_client_for_ui: ApiForUI, dummy_board_for_ui: str) -> dict:   
+    lists_on_board = api_client_for_ui.get_lists_by_board_id(dummy_board_for_ui)
+
+    with allure.step("получить названия колонок на доске"):    
+        lists = {
+            'list_one_id': lists_on_board[0]["name"],
+            'list_two_id': lists_on_board[1]["name"],
+            'list_three_id': lists_on_board[2]["name"]
+        }
+
+    with allure.step("перейти к удалению доски"): # удаление доски - после yield, тут написано, чтобы красиво было в отчёте
+        yield lists
+
+
+@pytest.fixture
+def card_to_delete(browser, dummy_board_for_ui: str, test_data: dict):
+    card_name = test_data.get("card_name")
+    list_page = ListPage(browser)
+    list_page.create_card(card_name)
+
+@pytest.fixture
+def dummy_board_for_moving(browser, test_data: dict, api_client_for_ui: ApiForUI): 
+    board_name = test_data.get("board_name")
+    list_names = test_data.get("list_names")
+    card_name = test_data.get("card_name")
+
+    resp = api_client_for_ui.create_board(board_name).get("id")
+
+    board_page = BoardPage(browser)
+    board_page.create_lists_for_moving(list_names)
+
+    list_page = ListPage(browser)
+    list_page.create_card(card_name)
+
+    yield browser
+
+    with allure.step("Удалить доску после теста"):
+        api_client_for_ui.delete_board_by_id(resp) 
+
+
+@pytest.fixture
+def api_client() -> BoardAPI:
+    with allure.step("Создать экземпляр класса BoardAPI"):
+        return BoardAPI(
+            ConfigProvider().get_api_url(),
+            UserProvider().get_user_token())
+
+
+@pytest.fixture
+def api_client_no_auth() -> BoardAPI:
+    with allure.step("Создать экземпляр класса BoardAPI без авторизации"):
+        return BoardAPI(ConfigProvider().get("api", "base_url"), "")
+
+
+@pytest.fixture
+def dummy_board_id(api_client: BoardAPI, test_data: dict) -> str:
+    card_name = test_data.get("card_name")
+    with allure.step("Создать доску. Количество колонок по умолчанию - три"):
+        resp = api_client.create_board(card_name).get("id")
         return resp
 
 
-    @pytest.fixture
-    def delete_board() -> str:
-        dictionary = {"board_id": ""}
+@pytest.fixture
+def delete_board(api_client: BoardAPI) -> str:
+    dictionary = {"board_id": ""}
 
-        yield dictionary
-    
-        with allure.step("Удалить доску после теста"):
-            api = BoardApi(ConfigProvider().get("api", "base_url"), token)
-            api.delete_board_by_id(dictionary.get("board_id"))
+    yield dictionary
 
-
-    # ----------------------- Здесь я буду пистаь новые фикстуры -----------------------------------
-
-    @pytest.fixture
-    def get_id_list(dummy_board_id):
-        api = BoardApi(ConfigProvider().get("api", "base_url"), token)
-    
-        with allure.step("Получить id первого списка"):
-            list_id_1 = api.get_list(dummy_board_id)[0]["id"] # Получить айди первого списка
-        with allure.step("Получить id следующего списка"):
-            list_id_2 = api.get_list(dummy_board_id)[1]["id"] # Получить айди следующего списка    
-        with allure.step("Возвращаем  id списков"):
-        
-            return list_id_1, list_id_2, dummy_board_id
+    with allure.step("Получить id доски для её удаления"):
+        board_id = dictionary.get("board_id")
+    with allure.step("Удалить доску после теста"):
+        api_client.delete_board_by_id(board_id)
 
 
-    @pytest.fixture
-    def create_new_card(get_id_list):
-        api = BoardApi(ConfigProvider().get("api", "base_url"), token)
-        id_board = get_id_list[2]
-        with allure.step("Получить id листа"):
-            id_list = get_id_list[0]
-        with allure.step("Создание карточки на листе"):
-            card = api.add_card(id_list, fake.text(20)) # Создать карточку на листе
+@pytest.fixture
+def dummy_board(api_client: BoardAPI, test_data: dict) -> str:
+    card_name = test_data.get("card_name")
+    with allure.step("Создать доску. Количество колонок по умолчанию - три"):
+        resp = api_client.create_board(card_name).get("id")
 
-        with allure.step("Получить id карточки"):
-            id_card = card["id"]
-    
-        return  id_card, id_list, id_board
+        yield resp
+
+    with allure.step("Удалить доску после теста"):
+        api_client.delete_board_by_id(resp)    
 
 
+@pytest.fixture
+def lists_on_board(api_client: BoardAPI, dummy_board: str) -> dict:   
+    lists_on_board = api_client.get_lists_by_board_id(dummy_board)
+
+    with allure.step("Получить id колонок на доске"):    
+        lists = {
+            'list_one_id': lists_on_board[0]["id"],
+            'list_two_id': lists_on_board[1]["id"],
+            'list_three_id': lists_on_board[2]["id"]
+        }
+    with allure.step("перейти к удалению доски"):    
+        yield lists  
 
 
-# ----------------------- Это окончание моих экспериментов -----------------------------------
-   
+@pytest.fixture
+def api_card_client() -> CardAPI:
+    with allure.step("Создать экземпляр класса CardAPI"):
+        return CardAPI(
+            ConfigProvider().get("api", "base_url"),
+            UserProvider().get_user_token())
 
 
-    @pytest.fixture
-    def test_delete_boards_from_ui(ui_client: Api_for_UI):
-        board_list = ui_client.get_all_boards_by_org_id(org_id)
-        id_board = board_list[0]["id"]
-        ui_client.delete_board_by_id(id_board)
-     
+@pytest.fixture
+def dummy_card_id(api_card_client: CardAPI, lists_on_board: dict, test_data: dict) -> str:
+    list_one_id = lists_on_board['list_one_id']
+    card_name = test_data.get("card_name")
+
+    with allure.step("Создать карточку"):
+        resp = api_card_client.create_card(list_one_id, card_name).get("id")
+
+        return resp
 
 
+@pytest.fixture
+def get_lists_on_board_by_dummy_card_id(api_client: BoardAPI, api_card_client: CardAPI, dummy_card_id: str) -> dict:
+    with allure.step("Получить id доски, на которой расположена карточка"):    
+        board_id_of_card = api_card_client.get_card_info(dummy_card_id)["idBoard"]
+
+    with allure.step("Получить список колонок на доске, на которой расположена карточка"):    
+        lists_on_board = api_client.get_lists_by_board_id(board_id_of_card)    
+
+    with allure.step("Получить id колонок на доске, на которой расположена карточка"):    
+        lists = {
+            'list_one_id': lists_on_board[0]["id"],
+            'list_two_id': lists_on_board[1]["id"],
+            'list_three_id': lists_on_board[2]["id"]
+        }
+        return lists
